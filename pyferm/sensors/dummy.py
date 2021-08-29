@@ -6,13 +6,12 @@ import time
 
 
 class dummy(brewsensor):
-    def __init__(self, name="Dummy"):
-        self.name = name
+    def __init__(self, name="Dummy", parent=None):
+        super().__init__(name, parent)
         self.metrics = [
             brewmetric(name="Temperature", metric_type="temperature"),
             brewmetric(name="Gravity", metric_type="gravity"),
         ]
-        super().__init__(self.name)
 
     def get_metrics(self):
         time.sleep(2)

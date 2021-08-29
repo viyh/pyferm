@@ -11,6 +11,7 @@ class pyferm:
     def start(self):
         self.load_sensors()
         self.load_steps()
+        self.load_outputs()
         self.step_runner.start()
 
     def load_config(self, config_filename="pyferm.yaml"):
@@ -25,7 +26,22 @@ class pyferm:
         for sensor in self.config.get("sensors", {}):
             self.sensors.append(
                 class_loader(
-                    sensor["class"], sensor["name"], **sensor.get("params", {})
+                    sensor["class"],
+                    sensor["name"],
+                    parent=self,
+                    **sensor.get("params", {})
+                )
+            )
+
+    def load_outputs(self):
+        self.outputs = []
+        for output in self.config.get("outputs", {}):
+            self.outputs.append(
+                class_loader(
+                    output["class"],
+                    output["name"],
+                    parent=self,
+                    **output.get("params", {})
                 )
             )
 

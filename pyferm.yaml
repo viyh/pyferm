@@ -16,11 +16,23 @@ sensors:
     class: pyferm.sensors.dummy.dummy
 
 outputs:
-  - name: brewfather
-    class: pyferm.outputs.brewfather
+  # - name: brewfather
+  #   class: pyferm.outputs.brewfather
 
   - name: logfile
-    class: pyferm.outputs.csv
+    class: pyferm.outputs.brewoutput_csv
+    params:
+      interval: 10
+      filename: log.csv
+      sources:
+        - source_type: metric
+          source:
+            sensor: my_tilt
+            metric: Temperature
+        - source_type: metric
+          source:
+            sensor: my_tilt
+            metric: Gravity
 
 controls:
   - name: ferm_heater

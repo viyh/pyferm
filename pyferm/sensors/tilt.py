@@ -52,8 +52,7 @@ class tilt_scanner(singleton):
 
 
 class tilt(brewsensor):
-    def __init__(self, name="Tilt", color=None):
-        self.name = name
+    def __init__(self, name="Tilt", parent=None, color=None):
         if color:
             self.uuid = [u for u, c in TILTS.items() if c.lower() == color.lower()][0]
             if name == "Tilt":
@@ -65,7 +64,7 @@ class tilt(brewsensor):
             brewmetric("Gravity", metric_type="gravity"),
         ]
         self.tilt_scanner = tilt_scanner()
-        super().__init__(self.name)
+        super().__init__(name, parent)
 
     def get_metrics(self):
         # pick the first Tilt if color/uuid is not set

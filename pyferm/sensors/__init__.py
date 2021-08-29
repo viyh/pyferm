@@ -14,8 +14,9 @@ class singleton(object):
 
 
 class brewsensor:
-    def __init__(self, name):
+    def __init__(self, name, parent):
         self.name = name
+        self.parent = parent
         logging.debug(f"sensor - {self.name} init")
         self.interval = 7
         self.thread = threading.Thread(name=self.name, target=self.run, args=())
