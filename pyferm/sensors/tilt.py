@@ -1,8 +1,10 @@
 # pybrew - sensor - Tilt Hydrometer
 
-from . import singleton, brewsensor, brewmetric
+from pyferm.sensors import singleton, brewsensor, brewmetric
 from beacontools import BeaconScanner, IBeaconFilter
 import time
+import datetime
+import logging
 import threading
 from random import randint
 
@@ -34,6 +36,7 @@ class tilt_scanner(singleton):
         self.cache[additional_info["uuid"]] = {
             "temperature": additional_info["major"],
             "gravity": additional_info["minor"] / 1000,
+            "last_seen": datetime.datetime.utcnow(),
         }
 
     def run(self):
@@ -71,7 +74,16 @@ class tilt(brewsensor):
             self.uuid = cached_uuids[0]
             self.name = f"Tilt ({TILTS[self.uuid]})"
         if self.uuid and self.uuid in self.tilt_scanner.cache:
-            self.metrics[0].set_value(self.tilt_scanner.cache[self.uuid]["temperature"])
-            self.metrics[1].set_value(self.tilt_scanner.cache[self.uuid]["gravity"])
+            self.last_seen = self.tilt_scanner.cache[self.uuid]["last_seen"]
+            logging.debug(
+                f"sensor - {self.name} - last seen: "
+                f'{self.last_seen.strftime("%Y-%m-%d %H:%M:%S")}'
+            )
+            self.get_metric_by_name("Temperature").set_value(
+                self.tilt_scanner.cache[self.uuid]["temperature"]
+            )
+            self.get_metric_by_name("Gravity").set_value(
+                self.tilt_scanner.cache[self.uuid]["gravity"]
+            )
         else:
             time.sleep(10)

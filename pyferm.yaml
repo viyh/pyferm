@@ -31,31 +31,37 @@ controls:
 
 steps:
   - name: hold temp
-    class: pyferm.steps.interval.interval
+    class: pyferm.steps.brewstep
     params:
-      duration: 15
-      triggers:
-        - input: my_tilt.metric[0]
-          value: 70
-          threshold: 1, 1
+      conditions:
+        - target_type: time
+          target: duration
+          value: 15
+          operator: ge
 
   - name: 50% attenuation
-    class: pyferm.steps.conditional.conditional
+    class: pyferm.steps.brewstep
     params:
       triggers:
-        - input: my_tilt.metric[0]
+        - target_type: metric
+          target:
+            sensor: my_tilt
+            metric: Temperature
           value: 70
-          threshold: 1, 1
+          operator: ge
       conditions:
-        - input: my_tilt.metric[1]
+        - target_type: metric
+          target:
+            sensor: my_tilt
+            metric: Gravity
           value: 1.050
-          threshold: 1, 1
+          operator: le
 
   - name: pause to dry hop
-    class: pyferm.steps.interval.interval
+    class: pyferm.steps.brewstep
     params:
-      duration: 0
-      triggers:
-        - input: my_tilt.metric[0]
-          value: 70
-          threshold: 1, 1
+      conditions:
+        - target_type: time
+          target: duration
+          value: -1
+          operator: le

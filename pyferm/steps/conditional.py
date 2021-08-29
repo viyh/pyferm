@@ -1,21 +1,29 @@
-from . import brewstep
+from pyferm.steps import brewstep
+import logging
+import datetime
 
 
 class conditional(brewstep):
-    pass
+    def __init__(self, name, triggers, conditions):
+        self.elapsed = None
+        super().__init__(name, triggers, conditions)
 
+    def start(self):
+        if self.status != 2:
+            logging.info(
+                f"condition - cannot start, status currently {self.get_status()}"
+            )
+            return False
+        self.status = 3
+        self.start_time = datetime.datetime.utcnow()
+        logging.debug(f"step - {self.name} start, conditional")
+        self.run_conditions()
 
-#   - name: 50% attenuation
-#     class: pyferm.steps.conditional.conditional
-#     conditions:
-#       - input: my_tilt.metric[1]
-#         value: 1.050
-#         threshold: 1, 1
-#     triggers:
-#       - input: my_tilt.metric[0]
-#         value: 70
-#         threshold: 1, 1
-
-# if triggers are met, then start
-# do the thing, for interval do duration, for conditional check conditions
-# if conditions are met, move to next step
+    def stop(self):
+        self.status = 4
+        self.end_time = datetime.datetime.utcnow()
+        logging.debug(
+            f"condition - stop - start time: {self.time_string(self.start_time)}"
+        )
+        logging.debug(f"condition - stop - end time: {self.time_string(self.end_time)}")
+        logging.debug(f"condition - stop - elapsed time: {self.elapsed} seconds")

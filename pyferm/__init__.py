@@ -30,4 +30,7 @@ class pyferm:
             )
 
     def load_steps(self):
-        self.step_runner = brewstep_runner(self.config)
+        self.step_runner = brewstep_runner(parent=self, config=self.config)
+
+    def get_sensor_by_name(self, name):
+        return next((s for s in self.sensors if s.name == name), None)

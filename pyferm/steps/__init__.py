@@ -1,85 +1,119 @@
 import logging
 import time
+import datetime
 from pyferm.utils import class_loader
+from pyferm.conditions import condition
+from enum import Enum
 
-STEP_STATUS = {
-    0: "NOT RUNNING",
-    1: "WAITING FOR TRIGGER",
-    2: "TRIGGERS COMPLETE",
-    3: "RUNNING",
-    4: "COMPLETED",
-    5: "FAILED",
-    6: "UNKNOWN",
-}
+
+class step_status(Enum):
+    NOT_RUNNING = 0
+    WAITING_FOR_TRIGGERS = 1
+    TRIGGERS_COMPLETE = 2
+    RUNNING = 3
+    COMPLETED = 4
+    FAILED = 5
+    UNKNOWN = 6
 
 
 class brewstep:
-    def __init__(self, name, triggers=[]):
-        self.triggers = triggers
-        self.status = 0
+    def __init__(self, name, parent, duration=None, triggers=[], conditions=[]):
+        self.name = name
+        self.start_time = None
+        self.end_time = None
+        self.elapsed = None
+        self.duration = duration
+        self.triggers = self.load_conditions(triggers)
+        self.conditions = self.load_conditions(conditions)
+        self.status = step_status.NOT_RUNNING
+        self.parent = parent
         logging.debug(f"step - {self.name} init")
 
     def run(self):
         # if not running, begin
-        if self.status == 0:
-            self.status = 1
+        if self.status == step_status.NOT_RUNNING:
+            self.start_time = datetime.datetime.utcnow()
+            self.status = step_status.WAITING_FOR_TRIGGERS
         # if waiting for triggers, run triggers
-        if self.status == 1:
+        if self.status == step_status.WAITING_FOR_TRIGGERS:
             self.run_triggers()
-        if self.status == 2:
-            self.run()
-        if self.status == 3:
-            self.check()
+        if self.status == step_status.TRIGGERS_COMPLETE:
+            self.start()
+        if self.status == step_status.RUNNING:
+            self.run_conditions()
         else:
-            return
+            return False
+
+    def load_conditions(self, conditions):
+        condition_objs = []
+        for c in conditions:
+            condition_objs.append(condition(parent=self, **c))
+        return condition_objs
+
+    def check_conditions(self, conditions):
+        self.elapsed = (datetime.datetime.utcnow() - self.start_time).seconds
+        for c in conditions:
+            if c.status != step_status.COMPLETED.value:
+                c.check()
+        if all([c.status == step_status.COMPLETED.value for c in conditions]):
+            return True
+        else:
+            return False
+
+    def run_conditions(self):
+        logging.debug("run_conditions")
+        if self.check_conditions(self.conditions):
+            self.stop()
 
     def run_triggers(self):
-        if not self.triggers:
-            self.status = 2
-
-        for trigger in self.triggers:
-            logging.debug(f"step - {self.name} trigger - {trigger}")
-            # if trigger.get("status", 0) != 3:
-            #     self.check_trigger()
-        self.status = 2
-
-        if self.status == 2:
-            self.start()
+        logging.debug("run_triggers")
+        if self.check_conditions(self.triggers):
+            self.status = step_status.TRIGGERS_COMPLETE
 
     def start(self):
-        self.status = 3
+        if self.status != step_status.TRIGGERS_COMPLETE:
+            logging.info(
+                f"condition - cannot start, status currently {self.get_status()}"
+            )
+            return False
+        self.status = step_status.RUNNING
         logging.debug(f"step - {self.name} start")
 
     def stop(self):
-        self.status = 4
+        self.status = step_status.COMPLETED
+        self.end_time = datetime.datetime.utcnow()
         logging.debug(f"step - {self.name} stop")
-        pass
-
-    def check(self):
-        logging.debug(f"step - {self.name} - status: {self.get_status()}")
-        pass
+        logging.debug(
+            f"step - {self.name} - start time: {self.time_string(self.start_time)}"
+        )
+        logging.debug(
+            f"step - {self.name} - end time: {self.time_string(self.end_time)}"
+        )
+        logging.debug(f"step - {self.name} - elapsed time: {self.elapsed} seconds")
 
     def get_status(self):
-        return STEP_STATUS[self.status]
+        return step_status(self.status).name
 
     def time_string(self, dt):
-        return dt.strftime("%Y-%d-%m %H:%M:%S")
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
 class brewstep_runner:
-    def __init__(self, config={}):
+    def __init__(self, parent, config={}):
         logging.debug("step_runner - init")
         self.config = config
         self.interval = self.config["vars"]["step_runner_interval"]
         self.load_steps()
         self.current_step = 0
+        self.parent = parent
 
     def load_steps(self):
         self.steps = []
         for step in self.config.get("steps", {}):
-            self.steps.append(
-                class_loader(step["class"], step["name"], **step.get("params", {}))
+            s = class_loader(
+                step["class"], step["name"], parent=self, **step.get("params", {})
             )
+            self.steps.append(s)
 
     def start(self):
         while True:
@@ -93,6 +127,6 @@ class brewstep_runner:
 
     def run(self):
         self.steps[self.current_step].run()
-        if self.steps[self.current_step].status == 4:
+        if self.steps[self.current_step].status == step_status.COMPLETED:
             self.current_step += 1
             self.run()

@@ -22,6 +22,8 @@ class brewsensor:
         self.thread.daemon = True
         if not self.thread.is_alive():
             self.thread.start()
+        if not hasattr(self, "metrics"):
+            self.metrics = []
 
     def run(self):
         while True:
@@ -31,6 +33,9 @@ class brewsensor:
                     f"sensor - {self.name:20s} {m.name:20s} {m.get_formatted_value()}"
                 )
             time.sleep(self.interval)
+
+    def get_metric_by_name(self, name):
+        return next((m for m in self.metrics if m.name == name), None)
 
 
 class brewmetric_type:

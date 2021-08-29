@@ -5,13 +5,11 @@ import datetime
 
 class interval(brewstep):
     def __init__(self, name, duration, triggers):
-        self.name = name
         self.duration = duration
         self.start_time = None
         self.end_time = None
         self.elapsed = None
-        self.triggers = triggers
-        super().__init__(self.name, self.triggers)
+        super().__init__(name, triggers)
 
     def start(self):
         if self.status != 2:
@@ -36,9 +34,6 @@ class interval(brewstep):
         )
         logging.debug(f"step - {self.name} stop - elapsed time: {self.elapsed} seconds")
 
-    def time_string(self, dt):
-        return dt.strftime("%Y-%d-%m %H:%M:%S")
-
     def check(self):
         self.elapsed = (datetime.datetime.utcnow() - self.start_time).seconds
         logging.debug(
@@ -47,23 +42,3 @@ class interval(brewstep):
         )
         if self.elapsed >= self.duration and self.duration != 0:
             self.stop()
-
-
-# steps:
-#   - name: hold temp
-#     class: pyferm.steps.interval.interval
-#     params:
-#       duration: 3600
-#     triggers:
-#       - input: my_tilt.metric[0]
-#         value: 70
-#         threshold: 1, 1
-
-#   - name: pause to dry hop
-#     class: pyferm.steps.interval.interval
-#     params:
-#       duration: 0
-#     triggers:
-#       - input: my_tilt.metric[0]
-#         value: 70
-#         threshold: 1, 1
