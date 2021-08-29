@@ -1,0 +1,61 @@
+vars:
+  name: saison
+  og: 1.068
+  step_runner_interval: 10
+
+sensors:
+  - name: my_tilt
+    class: pyferm.sensors.tilt.tilt
+    params:
+      color: yellow
+
+  - name: dummy1
+    class: pyferm.sensors.dummy.dummy
+
+  - name: dummy2
+    class: pyferm.sensors.dummy.dummy
+
+outputs:
+  - name: brewfather
+    class: pyferm.outputs.brewfather
+
+  - name: logfile
+    class: pyferm.outputs.csv
+
+controls:
+  - name: ferm_heater
+    class: pyferm.controls.heater
+
+  - name: ferm_cooler
+    class: pyferm.controls.cooler
+
+steps:
+  - name: hold temp
+    class: pyferm.steps.interval.interval
+    params:
+      duration: 15
+      triggers:
+        - input: my_tilt.metric[0]
+          value: 70
+          threshold: 1, 1
+
+  - name: 50% attenuation
+    class: pyferm.steps.conditional.conditional
+    params:
+      triggers:
+        - input: my_tilt.metric[0]
+          value: 70
+          threshold: 1, 1
+      conditions:
+        - input: my_tilt.metric[1]
+          value: 1.050
+          threshold: 1, 1
+
+  - name: pause to dry hop
+    class: pyferm.steps.interval.interval
+    params:
+      duration: 0
+      triggers:
+        - input: my_tilt.metric[0]
+          value: 70
+          threshold: 1, 1
