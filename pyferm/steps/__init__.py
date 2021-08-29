@@ -17,12 +17,11 @@ class step_status(Enum):
 
 
 class brewstep:
-    def __init__(self, name, parent, duration=None, triggers=[], conditions=[]):
+    def __init__(self, name, parent, triggers=[], conditions=[]):
         self.name = name
         self.start_time = None
         self.end_time = None
         self.elapsed = None
-        self.duration = duration
         self.triggers = self.load_conditions(triggers)
         self.conditions = self.load_conditions(conditions)
         self.status = step_status.NOT_RUNNING
