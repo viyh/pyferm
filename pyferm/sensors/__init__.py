@@ -52,8 +52,8 @@ class brewmetric_unit:
 class temperature(brewmetric_type):
     def __init__(self):
         self.units = [
-            {"name": "F", "format": ".2f"},
-            {"name": "C", "format": ".2f"},
+            {"name": "Fahrenheit", "format": ".2f", "symbol": "°F"},
+            {"name": "Celsius", "format": ".2f", "symbol": "°C"},
         ]
 
     def f_to_c(self, f):
@@ -66,9 +66,9 @@ class temperature(brewmetric_type):
 class gravity(brewmetric_type):
     def __init__(self):
         self.units = [
-            {"name": "SG", "format": ".3f"},
-            {"name": "°P", "format": ".2f"},
-            {"name": "°Bx", "format": ".2f"},
+            {"name": "Specific Gravity", "format": ".3f", "symbol": "SG"},
+            {"name": "Plato", "format": ".2f", "symbol": "°P"},
+            {"name": "Brix", "format": ".2f", "symbol": "°Bx"},
         ]
 
     def brix_to_sg(self, brix):
@@ -98,28 +98,28 @@ class gravity(brewmetric_type):
 class humidity(brewmetric_type):
     def __init__(self):
         self.units = [
-            {"name": "%", "format": ".2f"},
+            {"name": "Percent", "format": ".2f", "symbol": "%"},
         ]
 
 
 class ph(brewmetric_type):
     def __init__(self):
         self.units = [
-            {"name": "", "format": ".2f"},
+            {"name": "pH", "format": ".2f", "symbol": ""},
         ]
 
 
 class abv(brewmetric_type):
     def __init__(self):
         self.units = [
-            {"name": "%", "format": ".2f"},
+            {"name": "Percent", "format": ".2f", "symbol": "%"},
         ]
 
 
 class count(brewmetric_type):
     def __init__(self):
         self.units = [
-            {"name": "", "format": "d"},
+            {"name": "Count", "format": "d", "symbol": ""},
         ]
 
 
@@ -144,6 +144,6 @@ class brewmetric:
 
     def get_formatted_value(self):
         try:
-            return f"{self.get_value():{self.unit['format']}} {self.unit['name']}"
+            return f"{self.get_value():{self.unit['format']}} {self.unit['symbol']}"
         except TypeError:
-            return f"{self.get_value()} {self.unit['name']}"
+            return f"{self.get_value()} {self.unit['symbol']}"

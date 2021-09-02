@@ -1,6 +1,6 @@
 vars:
-  name: saison
-  og: 1.068
+  beer_name: saison
+  beer_og: 1.068
   step_runner_interval: 10
 
 sensors:
@@ -16,23 +16,28 @@ sensors:
     class: pyferm.sensors.dummy.dummy
 
 outputs:
-  # - name: brewfather
-  #   class: pyferm.outputs.brewfather
+  - name: brewfather
+    class: pyferm.outputs.brewfather.brewfather
+    params:
+      api_key: 1234
+      metrics:
+        temp:
+          sensor: my_tilt
+          metric: Temperature
+        gravity:
+          sensor: my_tilt
+          metric: Gravity
 
   - name: logfile
     class: pyferm.outputs.brewoutput_csv
     params:
       interval: 10
       filename: log.csv
-      sources:
-        - source_type: metric
-          source:
-            sensor: my_tilt
-            metric: Temperature
-        - source_type: metric
-          source:
-            sensor: my_tilt
-            metric: Gravity
+      metrics:
+        - sensor: my_tilt
+          metric: Temperature
+        - sensor: my_tilt
+          metric: Gravity
 
 controls:
   - name: ferm_heater
