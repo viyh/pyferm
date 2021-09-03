@@ -22,10 +22,19 @@ unit_map = {
 
 
 class brewfather(brewoutput):
-    def __init__(self, name, parent, interval=900, api_key=None, metrics={}):
-        self.api_key = api_key
-        if not self.api_key:
-            self.log("api_key param must be set to post data to brewfather.")
+    def __init__(
+        self,
+        name,
+        parent,
+        interval=900,
+        custom_stream_name="Pyferm",
+        custom_stream_id=None,
+        metrics={},
+    ):
+        self.custom_stream_name = custom_stream_name
+        self.custom_stream_id = custom_stream_id
+        if not self.custom_stream_id:
+            self.log("custom_stream_id param must be set to post data to Brewfather.")
             return False
         self.metrics_config = metrics
         super().__init__(name, parent, interval)
@@ -40,7 +49,7 @@ class brewfather(brewoutput):
         return self.post_request(json=data)
 
     def post_request(self, url="https://log.brewfather.net/stream", json=None):
-        params = {"id": self.api_key}
+        params = {"id": self.custom_stream_id}
         self.log(f"json: {json}", "debug")
         response = requests.post(url, params=params, json=json)
         if response.status_code == 200:
@@ -68,7 +77,7 @@ class brewfather(brewoutput):
                 self.metrics[f"{metric_name}_unit"] = unit_map[metric.unit["name"]]
 
     def create_request(self):
-        data = {"name": "pyferm"}
+        data = {"name": self.custom_stream_name}
         for key, value in self.metrics.items():
             data[key] = value
         return data

@@ -15,5 +15,5 @@ class dummy(brewsensor):
 
     def get_metrics(self):
         time.sleep(2)
-        self.get_metric_by_name("Temperature").set_value(randint(0, 10))
-        self.get_metric_by_name("Gravity").set_value(randint(0, 10))
+        self.get_metric_by_name("Temperature").set_value(randint(50, 80))
+        self.get_metric_by_name("Gravity").set_value(randint(1000, 1070) / 1000.0)
