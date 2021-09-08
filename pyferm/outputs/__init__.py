@@ -17,6 +17,10 @@ class brewoutput:
         if not self.thread.is_alive():
             self.thread.start()
 
+    def log(self, message, level="info"):
+        logger = getattr(logging, level)
+        logger(f"{self.logprefix:40s} {message}")
+
     def run(self):
         while True:
             if not self.push():
@@ -39,10 +43,6 @@ class brewoutput:
     def push(self):
         self.log(f"output - {self.name}")
 
-    def log(self, message, level="info"):
-        logger = getattr(logging, level)
-        logger(f"{self.logprefix} - {message}")
-
 
 class brewoutput_csv(brewoutput):
     def __init__(self, name, parent, interval=60, filename=None, metrics=[]):
@@ -61,6 +61,7 @@ class brewoutput_csv(brewoutput):
         for metric_name, metric_value in self.get_metrics().items():
             row.append(f"{metric_value}")
         self.writerow(row)
+        return True
 
     def init_csv(self):
         if os.path.exists(self.filename):

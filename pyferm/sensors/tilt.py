@@ -4,7 +4,6 @@ from pyferm.sensors import singleton, brewsensor, brewmetric
 from beacontools import BeaconScanner, IBeaconFilter
 import time
 import datetime
-import logging
 import threading
 from random import randint
 
@@ -74,9 +73,9 @@ class tilt(brewsensor):
             self.name = f"Tilt ({TILTS[self.uuid]})"
         if self.uuid and self.uuid in self.tilt_scanner.cache:
             self.last_seen = self.tilt_scanner.cache[self.uuid]["last_seen"]
-            logging.debug(
-                f"sensor - {self.name} - last seen: "
-                f'{self.last_seen.strftime("%Y-%m-%d %H:%M:%S")}'
+            self.log(
+                f'last seen: {self.last_seen.strftime("%Y-%m-%d %H:%M:%S")}',
+                "debug",
             )
             self.get_metric_by_name("Temperature").set_value(
                 self.tilt_scanner.cache[self.uuid]["temperature"]

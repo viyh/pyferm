@@ -17,7 +17,8 @@ class brewsensor:
     def __init__(self, name, parent):
         self.name = name
         self.parent = parent
-        logging.debug(f"sensor - {self.name} init")
+        self.logprefix = f"sensor - {self.name}"
+        self.log("init")
         self.interval = 7
         self.thread = threading.Thread(name=self.name, target=self.run, args=())
         self.thread.daemon = True
@@ -26,13 +27,15 @@ class brewsensor:
         if not hasattr(self, "metrics"):
             self.metrics = []
 
+    def log(self, message, level="info"):
+        logger = getattr(logging, level)
+        logger(f"{self.logprefix:40s} {message}")
+
     def run(self):
         while True:
             self.get_metrics()
             for m in self.metrics:
-                logging.debug(
-                    f"sensor - {self.name:20s} {m.name:20s} {m.get_formatted_value()}"
-                )
+                self.log(f"{m.name:20s} {m.get_formatted_value()}", "debug")
             time.sleep(self.interval)
 
     def get_metric_by_name(self, name):

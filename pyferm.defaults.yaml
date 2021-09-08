@@ -1,0 +1,132 @@
+vars:
+  beer_name: Example Beer
+  beer_og: 1.068
+  step_runner_interval: 10
+
+sensors:
+  - name: dummy1
+    class: pyferm.sensors.dummy.dummy
+  - name: dummy2
+    class: pyferm.sensors.dummy.dummy
+
+outputs:
+  - name: logfile
+    class: pyferm.outputs.brewoutput_csv
+    params:
+      interval: 10
+      filename: log.csv
+      metrics:
+        - sensor: dummy1
+          metric: Temperature
+        - sensor: dummy2
+          metric: Gravity
+
+controls:
+  - name: ferm_heater
+    class: pyferm.controls.ifttt.ifttt
+    params:
+      webhooks:
+        off:
+          webhook_event: fv1_heater_off
+          secret_key: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2
+        on:
+          webhook_event: fv1_heater_on
+          secret_key: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2
+
+  - name: ferm_cooler
+    class: pyferm.controls.ifttt.ifttt
+    params:
+      webhooks:
+        off:
+          webhook_event: fv1_cooler_off
+          secret_key: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2
+        on:
+          webhook_event: fv1_cooler_on
+          secret_key: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2
+
+actions:
+  - name: hold
+    class: pyferm.actions.hold.hold
+    params:
+      metric:
+        sensor: dummy1
+        metric: Temperature
+      controls:
+        low:
+          control: ferm_heater
+          threshold: 1
+        high:
+          control: ferm_cooler
+          threshold: 1
+
+  - name: ramp
+    class: pyferm.actions.ramp.ramp
+    params:
+      metric:
+        sensor: dummy1
+        metric: Temperature
+      controls:
+        low:
+          control: ferm_heater
+          threshold: 1
+        high:
+          control: ferm_cooler
+          threshold: 1
+
+steps:
+  - name: hold temp for 15 seconds
+    class: pyferm.steps.brewstep
+    params:
+      actions:
+        - action: hold
+          value: 50
+      conditions:
+        - target_type: time
+          target: duration
+          value: 15
+          operator: ge
+
+  - name: hold temp until 50% attenuation
+    class: pyferm.steps.brewstep
+    params:
+      actions:
+        - action: hold
+          value: 50
+      conditions:
+        - target_type: metric
+          target:
+            sensor: dummy2
+            metric: Gravity
+          value: 1.050
+          operator: le
+
+  - name: ramp up temp for diacetyl rest
+    class: pyferm.steps.brewstep
+    params:
+      actions:
+        - action: ramp
+          start_value: 50
+          end_value: 62
+          step_interval: 3600
+          step_size: 2
+      triggers:
+        - target_type: metric
+          target:
+            sensor: dummy1
+            metric: Temperature
+          value: 62
+          operator: ge
+      conditions:
+        - target_type: time
+          target: duration
+          value: 86400
+          operator: ge
+
+  - name: pause to dry hop
+    class: pyferm.steps.brewstep
+    params:
+      conditions:
+        - target_type: time
+          target: duration
+          value: -1
+          operator: le
