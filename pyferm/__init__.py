@@ -6,24 +6,34 @@ from pyferm.steps import step_status
 from pyferm.utils import class_loader
 
 
+class singleton(object):
+    def __new__(cls, *args, **kw):
+        if not hasattr(cls, "_instance"):
+            orig = super(singleton, cls)
+            cls._instance = orig.__new__(cls, *args, **kw)
+        return cls._instance
+
+
 class threader:
     def start_thread(self):
-        self.interval = 30
+        if not hasattr(self, "interval"):
+            self.interval = 30
         self.thread = threading.Thread(name=self.name, target=self.run)
         self.thread.daemon = True
-        self._is_running = False
         if not self.thread.is_alive():
             self.thread.start()
 
     def log(self, message, level="info"):
         logger = getattr(logging, level)
-        logger(f"{self.logprefix:40s} {message}")
+        logger(f"{self.logprefix:50s} {message}")
 
     def start(self):
+        self.log("thread start")
         self._is_running = True
         self.start_thread()
 
     def stop(self):
+        self.log("thread stop")
         self._is_running = False
 
     def run(self):
@@ -40,7 +50,7 @@ class pyferm:
 
     def log(self, message, level="info"):
         logger = getattr(logging, level)
-        logger(f"{self.logprefix:40s} {message}")
+        logger(f"{self.logprefix:50s} {message}")
 
     def start(self):
         self.load_sensors()
@@ -56,7 +66,7 @@ class pyferm:
                 try:
                     self.config.update(yaml.safe_load(config_file))
                 except yaml.YAMLError as exc:
-                    logging.error(exc)
+                    self.log(exc, "error")
 
     def load_sensors(self):
         self.sensors = []
@@ -112,18 +122,20 @@ class pyferm:
                     step["class"], step["name"], parent=self, **step.get("params", {})
                 )
             )
-        # self.step_runner = brewstep_runner(parent=self, config=self.config)
 
     def step_runner(self):
         self.log("step_runner - start")
-        while True:
+        self._is_running = True
+        while self._is_running:
             self.steps[self.current_step].run()
             if self.steps[self.current_step].status == step_status.COMPLETED:
-                self.log(f"step_runner - step {self.current_step} complete.")
+                self.log(f"step_runner - step {self.current_step + 1} complete.")
                 self.current_step += 1
-            # else:
-            #     logging.info(f"step_runner - sleeping {self.interval} seconds.")
-            #     time.sleep(self.interval)
+            if self.current_step >= len(self.steps):
+                self._is_running = False
+            else:
+                self.log(f"step_runner - sleeping {self.interval} seconds.")
+                time.sleep(self.interval)
         self.log("step_runner - end")
 
     def get_sensor_by_name(self, name):

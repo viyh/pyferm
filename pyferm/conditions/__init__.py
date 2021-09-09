@@ -4,17 +4,17 @@ import operator
 
 class condition:
     def __init__(self, parent, target_type, target, value, operator):
+        self.parent = parent
         self.logprefix = "condition"
         self.target_type = target_type
         self.target = target
         self.value = value
         self.operator = operator
         self.status = 0
-        self.parent = parent
 
     def log(self, message, level="info"):
         logger = getattr(logging, level)
-        logger(f"{self.logprefix:40s} {message}")
+        logger(f"{self.logprefix:50s} {message}")
 
     def check(self):
         self.log(f"{self.target_type} {self.operator} {self.value}", "debug")
@@ -27,7 +27,7 @@ class condition:
         sensor = self.parent.parent.get_sensor_by_name(self.target["sensor"])
         metric = sensor.get_metric_by_name(self.target["metric"])
         self.log(
-            f"check metric [{self.target['metric']}] - "
+            f"check metric [{self.target['sensor']} - {self.target['metric']}] - "
             f"current value: {metric.get_value()}",
             "debug",
         )
@@ -42,11 +42,11 @@ class condition:
         if not a or not b:
             return False
         if op(a, b):
-            self.status = 4
+            self.status = 3
 
     def get_operator_func(self):
         try:
             return getattr(operator, self.operator)
         except AttributeError:
-            self.log("Not a valid operator.", "error")
+            self.log(f"not a valid operator [{self.operator}]", "error")
             return False

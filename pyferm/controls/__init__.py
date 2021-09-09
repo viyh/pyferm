@@ -1,7 +1,7 @@
 import logging
 
 
-class brewcontrol:
+class control:
     def __init__(self, name, parent):
         self.name = name
         self.parent = parent
@@ -10,7 +10,7 @@ class brewcontrol:
 
     def log(self, message, level="info"):
         logger = getattr(logging, level)
-        logger(f"{self.logprefix:40s} {message}")
+        logger(f"{self.logprefix:50s} {message}")
 
     def on(self):
         pass

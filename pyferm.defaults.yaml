@@ -11,15 +11,15 @@ sensors:
 
 outputs:
   - name: logfile
-    class: pyferm.outputs.brewoutput_csv
+    class: pyferm.outputs.output_csv
     params:
       interval: 10
       filename: log.csv
       metrics:
         - sensor: dummy1
-          metric: Temperature
+          metric: temperature
         - sensor: dummy2
-          metric: Gravity
+          metric: gravity
 
 controls:
   - name: ferm_heater
@@ -50,7 +50,7 @@ actions:
     params:
       metric:
         sensor: dummy1
-        metric: Temperature
+        metric: temperature
       controls:
         low:
           control: ferm_heater
@@ -64,7 +64,7 @@ actions:
     params:
       metric:
         sensor: dummy1
-        metric: Temperature
+        metric: temperature
       controls:
         low:
           control: ferm_heater
@@ -74,8 +74,8 @@ actions:
           threshold: 1
 
 steps:
-  - name: hold temp for 15 seconds
-    class: pyferm.steps.brewstep
+  - name: hold temp at 50 F for 15 seconds
+    class: pyferm.steps.step
     params:
       actions:
         - action: hold
@@ -87,7 +87,7 @@ steps:
           operator: ge
 
   - name: hold temp until 50% attenuation
-    class: pyferm.steps.brewstep
+    class: pyferm.steps.step
     params:
       actions:
         - action: hold
@@ -96,12 +96,12 @@ steps:
         - target_type: metric
           target:
             sensor: dummy2
-            metric: Gravity
+            metric: gravity
           value: 1.050
           operator: le
 
   - name: ramp up temp for diacetyl rest
-    class: pyferm.steps.brewstep
+    class: pyferm.steps.step
     params:
       actions:
         - action: ramp
@@ -109,13 +109,6 @@ steps:
           end_value: 62
           step_interval: 3600
           step_size: 2
-      triggers:
-        - target_type: metric
-          target:
-            sensor: dummy1
-            metric: Temperature
-          value: 62
-          operator: ge
       conditions:
         - target_type: time
           target: duration
@@ -123,7 +116,7 @@ steps:
           operator: ge
 
   - name: pause to dry hop
-    class: pyferm.steps.brewstep
+    class: pyferm.steps.step
     params:
       conditions:
         - target_type: time

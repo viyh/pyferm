@@ -1,34 +1,28 @@
-import logging
 import csv
 import os
 import datetime
-import threading
 import time
+from pyferm import threader
 
 
-class brewoutput:
+class output(threader):
     def __init__(self, name, parent, interval=60):
         self.name = name
         self.parent = parent
         self.logprefix = f"output - {self.name}"
         self.interval = interval
-        self.thread = threading.Thread(name=self.name, target=self.run, args=())
-        self.thread.daemon = True
-        if not self.thread.is_alive():
-            self.thread.start()
-
-    def log(self, message, level="info"):
-        logger = getattr(logging, level)
-        logger(f"{self.logprefix:40s} {message}")
 
     def run(self):
-        while True:
+        while self._is_running:
             if not self.push():
-                self.log("Metric push failed. Retrying in 60 seconds.", "warn")
+                self.log("metric push failed. Retrying in 60 seconds.", "error")
                 time.sleep(60)
             else:
-                self.log(f"Sleeping {self.interval} seconds")
+                self.log(f"sleeping {self.interval} seconds")
                 time.sleep(self.interval)
+
+    def push(self):
+        self.log(f"output - {self.name}")
 
     def get_metrics(self):
         metrics = {}
@@ -40,11 +34,8 @@ class brewoutput:
             ] = metric.get_value()
         return metrics
 
-    def push(self):
-        self.log(f"output - {self.name}")
 
-
-class brewoutput_csv(brewoutput):
+class output_csv(output):
     def __init__(self, name, parent, interval=60, filename=None, metrics=[]):
         self.metrics = metrics
         self.filename = filename

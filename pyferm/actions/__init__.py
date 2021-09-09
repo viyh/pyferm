@@ -1,4 +1,4 @@
-import logging
+import datetime
 from pyferm import threader
 
 
@@ -10,10 +10,7 @@ class action(threader):
         self.state = None
         self.params = kwargs
         self.load_controls(self.params["controls"])
-
-    def log(self, message, level="info"):
-        logger = getattr(logging, level)
-        logger(f"{self.logprefix:40s} {message}")
+        self.action_start_time = datetime.datetime.utcnow()
 
     def low_on(self):
         self.controls["low"].on()
@@ -29,7 +26,7 @@ class action(threader):
 
     def set_params(self, action, **params):
         for p in params:
-            self.log(f"Setting param [{p}] = {params[p]}", "debug")
+            self.log(f"setting param [{p}] = {params[p]}", "debug")
             self.params[p] = params[p]
 
     def load_controls(self, controls):

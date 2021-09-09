@@ -7,15 +7,14 @@ from enum import Enum
 
 class step_status(Enum):
     NOT_RUNNING = 0
-    WAITING_FOR_TRIGGERS = 1
-    TRIGGERS_COMPLETE = 2
-    RUNNING = 3
-    COMPLETED = 4
-    FAILED = 5
-    UNKNOWN = 6
+    STARTING = 1
+    RUNNING = 2
+    COMPLETED = 3
+    FAILED = 4
+    UNKNOWN = 5
 
 
-class brewstep:
+class step:
     def __init__(self, name, parent, actions=[], triggers=[], conditions=[]):
         self.name = name
         self.parent = parent
@@ -25,29 +24,25 @@ class brewstep:
         self.elapsed = None
         self.interval = 10
         self.actions_config = actions
-        self.triggers = self.load_conditions(triggers)
         self.conditions = self.load_conditions(conditions)
         self.status = step_status.NOT_RUNNING
         self.log("init")
 
     def log(self, message, level="info"):
         logger = getattr(logging, level)
-        logger(f"{self.logprefix:40s} {message}")
+        logger(f"{self.logprefix:50s} {message}")
 
     def run(self):
         self.log(f"status: {self.get_status()}")
         # if not running, begin
         if self.status == step_status.NOT_RUNNING:
             self.start_time = datetime.datetime.utcnow()
-            self.status = step_status.WAITING_FOR_TRIGGERS
-        # if waiting for triggers, run triggers
-        if self.status == step_status.WAITING_FOR_TRIGGERS:
-            self.run_triggers()
-        if self.status == step_status.TRIGGERS_COMPLETE:
             self.start()
         if self.status == step_status.RUNNING:
             self.run_conditions()
-
+        if self.status == step_status.COMPLETED:
+            self._is_running = False
+            return True
         time.sleep(self.interval)
 
     def load_actions(self, actions):
@@ -81,19 +76,12 @@ class brewstep:
         if self.check_conditions(self.conditions):
             self.stop()
 
-    def run_triggers(self):
-        self.log("run_triggers", "debug")
-        if self.check_conditions(self.triggers):
-            self.status = step_status.TRIGGERS_COMPLETE
-
     def start(self):
-        if self.status != step_status.TRIGGERS_COMPLETE:
-            self.log(f"cannot start, status currently {self.get_status()}")
-            return False
-        self.status = step_status.RUNNING
+        self.status = step_status.STARTING
         self.actions = self.load_actions(self.actions_config)
         for action in self.actions:
             action.start()
+        self.status = step_status.RUNNING
         self.log("start")
 
     def stop(self):
@@ -103,9 +91,7 @@ class brewstep:
         self.log(f"start time: {self.time_string(self.start_time)}")
         self.log(f"end time: {self.time_string(self.end_time)}")
         self.log(f"elapsed time: {self.elapsed} seconds")
-        self.actions = []
-        # for action in self.actions:
-        #     action.stop()
+        self.actions = None
 
     def get_status(self):
         return step_status(self.status).name

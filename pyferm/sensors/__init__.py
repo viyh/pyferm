@@ -1,38 +1,22 @@
 import sys
 import math
 import time
-import threading
-import logging
+from pyferm import threader
 
 
-class singleton(object):
-    def __new__(cls, *args, **kw):
-        if not hasattr(cls, "_instance"):
-            orig = super(singleton, cls)
-            cls._instance = orig.__new__(cls, *args, **kw)
-        return cls._instance
-
-
-class brewsensor:
+class sensor(threader):
     def __init__(self, name, parent):
         self.name = name
         self.parent = parent
         self.logprefix = f"sensor - {self.name}"
         self.log("init")
         self.interval = 7
-        self.thread = threading.Thread(name=self.name, target=self.run, args=())
-        self.thread.daemon = True
-        if not self.thread.is_alive():
-            self.thread.start()
         if not hasattr(self, "metrics"):
             self.metrics = []
-
-    def log(self, message, level="info"):
-        logger = getattr(logging, level)
-        logger(f"{self.logprefix:40s} {message}")
+        self.start()
 
     def run(self):
-        while True:
+        while self._is_running:
             self.get_metrics()
             for m in self.metrics:
                 self.log(f"{m.name:20s} {m.get_formatted_value()}", "debug")
@@ -42,17 +26,17 @@ class brewsensor:
         return next((m for m in self.metrics if m.name == name), None)
 
 
-class brewmetric_type:
+class metric_type:
     def __init__(self):
         pass
 
 
-class brewmetric_unit:
+class metric_unit:
     def __init__(self):
         pass
 
 
-class temperature(brewmetric_type):
+class temperature(metric_type):
     def __init__(self):
         self.units = [
             {"name": "Fahrenheit", "format": ".2f", "symbol": "°F"},
@@ -66,7 +50,7 @@ class temperature(brewmetric_type):
         return 9.0 / 5.0 * c + 32
 
 
-class gravity(brewmetric_type):
+class gravity(metric_type):
     def __init__(self):
         self.units = [
             {"name": "Specific Gravity", "format": ".3f", "symbol": "SG"},
@@ -98,35 +82,35 @@ class gravity(brewmetric_type):
         )
 
 
-class humidity(brewmetric_type):
+class humidity(metric_type):
     def __init__(self):
         self.units = [
             {"name": "Percent", "format": ".2f", "symbol": "%"},
         ]
 
 
-class ph(brewmetric_type):
+class ph(metric_type):
     def __init__(self):
         self.units = [
             {"name": "pH", "format": ".2f", "symbol": ""},
         ]
 
 
-class abv(brewmetric_type):
+class abv(metric_type):
     def __init__(self):
         self.units = [
             {"name": "Percent", "format": ".2f", "symbol": "%"},
         ]
 
 
-class count(brewmetric_type):
+class count(metric_type):
     def __init__(self):
         self.units = [
             {"name": "Count", "format": "d", "symbol": ""},
         ]
 
 
-class brewmetric:
+class metric:
     def __init__(self, name, metric_type="count", unit=None):
         self.name = name
         self.metric_type = getattr(sys.modules[__name__], metric_type)()

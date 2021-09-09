@@ -1,10 +1,4 @@
-# from pyferm.utils import class_loader
-# import csv
-# import os
-# import threading
-# import time
-# import datetime
-from pyferm.outputs import brewoutput
+from pyferm.outputs import output
 import requests
 
 allowed_metrics = ["temp", "gravity", "pressure", "ph", "bpm"]
@@ -21,7 +15,7 @@ unit_map = {
 }
 
 
-class brewfather(brewoutput):
+class brewfather(output):
     def __init__(
         self,
         name,
@@ -43,7 +37,7 @@ class brewfather(brewoutput):
         self.log("Push output to brewfather", "debug")
         self.get_metrics()
         if not self.metrics:
-            self.log("No metrics to submit (either not configured of no values yet).")
+            self.log("no metrics to submit (either not configured of no values yet).")
             return False
         data = self.create_request()
         return self.post_request(json=data)
@@ -53,11 +47,11 @@ class brewfather(brewoutput):
         self.log(f"json: {json}", "debug")
         response = requests.post(url, params=params, json=json)
         if response.status_code == 200:
-            self.log(f"Submitted data: {json}")
+            self.log(f"submitted data: {json}")
             return True
         else:
             self.log(
-                "Received unsuccessful response. HTTP Error Code: "
+                "received unsuccessful response. HTTP Error Code: "
                 f"{response.status_code}"
             )
             return False
@@ -67,7 +61,7 @@ class brewfather(brewoutput):
         for metric_name, metric_config in self.metrics_config.items():
             if metric_name not in allowed_metrics:
                 self.log(
-                    f"Metric {metric_name} is not a known Brewfather metric.", "warn"
+                    f"metric {metric_name} is not a known Brewfather metric.", "warn"
                 )
                 continue
             sensor = self.parent.get_sensor_by_name(metric_config["sensor"])

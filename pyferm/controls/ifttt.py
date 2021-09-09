@@ -1,23 +1,23 @@
 import requests
-from pyferm.controls import brewcontrol
+from pyferm.controls import control
 
 
-class ifttt(brewcontrol):
+class ifttt(control):
     def __init__(self, name, parent, webhooks={}):
         self.webhooks = webhooks
         super().__init__(name, parent)
 
     def on(self):
-        self.log("Triggered on")
+        self.log("TRIGGERED ON")
         return self.trigger(True)
 
     def off(self):
-        self.log("Triggered off")
+        self.log("TRIGGERED OFF")
         return self.trigger(False)
 
     def trigger(self, state):
         if state not in self.webhooks:
-            self.log(f"No '{state}' webhook configured for control {self.name}")
+            self.log(f"no '{state}' webhook configured for control {self.name}")
             return None
         if self.post_request(**self.webhooks[state]):
             self.state = True if state == "on" else False
@@ -29,11 +29,11 @@ class ifttt(brewcontrol):
         url = f"https://maker.ifttt.com/trigger/{webhook_event}/with/key/{secret_key}"
         response = requests.post(url)
         if response.status_code == 200:
-            self.log(f"Posted event {webhook_event}")
+            self.log(f"posted event {webhook_event}")
             return True
         else:
             self.log(
-                "Received unsuccessful response. HTTP Error Code: "
+                "received unsuccessful response. HTTP Error Code: "
                 f"{response.status_code}"
             )
             return False
