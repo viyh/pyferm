@@ -13,6 +13,7 @@ class output(threader):
         self.interval = interval
 
     def run(self):
+        self.start_time = datetime.datetime.utcnow()
         while self._is_running:
             if not self.push():
                 self.log("metric push failed. Retrying in 60 seconds.", "error")
@@ -20,6 +21,15 @@ class output(threader):
             else:
                 self.log(f"sleeping {self.interval} seconds")
                 time.sleep(self.interval)
+
+    def start(self):
+        self.log("thread start")
+        self._is_running = True
+        self.start_thread()
+
+    def stop(self):
+        self.log("thread stop")
+        self._is_running = False
 
     def push(self):
         self.log(f"output - {self.name}")

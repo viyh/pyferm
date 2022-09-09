@@ -1,7 +1,6 @@
 import logging
 import operator
 
-
 class condition:
     def __init__(self, parent, target_type, target, value, operator):
         self.parent = parent

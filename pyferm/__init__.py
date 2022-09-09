@@ -105,14 +105,15 @@ class pyferm:
     def load_outputs(self):
         self.outputs = []
         for output in self.config.get("outputs", {}):
-            self.outputs.append(
-                class_loader(
-                    output["class"],
-                    output["name"],
-                    parent=self,
-                    **output.get("params", {}),
-                )
+            self.log(f"Loading output: {output['class']} - {output['name']}")
+            output = class_loader(
+                output["class"],
+                output["name"],
+                parent=self,
+                **output.get("params", {}),
             )
+            output.start()
+            self.outputs.append(output)
 
     def load_steps(self):
         self.steps = []
@@ -127,11 +128,12 @@ class pyferm:
         self.log("step_runner - start")
         self._is_running = True
         while self._is_running:
-            self.steps[self.current_step].run()
-            if self.steps[self.current_step].status == step_status.COMPLETED:
-                self.log(f"step_runner - step {self.current_step + 1} complete.")
-                self.current_step += 1
-            if self.current_step >= len(self.steps):
+            if self.steps:
+                self.steps[self.current_step].run()
+                if self.steps[self.current_step].status == step_status.COMPLETED:
+                    self.log(f"step_runner - step {self.current_step + 1} complete.")
+                    self.current_step += 1
+            if self.steps and self.current_step >= len(self.steps):
                 self._is_running = False
             else:
                 self.log(f"step_runner - sleeping {self.interval} seconds.")

@@ -27,6 +27,8 @@ class tilt_scanner(singleton):
         self.random = randint(0, 10000)
         self.interval = interval
         self.scantime = scantime
+        if self.interval < self.scantime:
+            raise("Tilt scan time must be less than the scan interval.")
         thread = threading.Thread(name="tilt_scanner", target=self.run, args=())
         thread.daemon = True
         if not thread.is_alive():

@@ -8,19 +8,21 @@ class ifttt(control):
         super().__init__(name, parent)
 
     def on(self):
-        self.log("TRIGGERED ON")
-        return self.trigger(True)
+        if self.state == False:
+            self.log("TRIGGERED ON")
+            return self.trigger(True)
 
     def off(self):
-        self.log("TRIGGERED OFF")
-        return self.trigger(False)
+        if self.state == True:
+            self.log("TRIGGERED OFF")
+            return self.trigger(False)
 
     def trigger(self, state):
         if state not in self.webhooks:
             self.log(f"no '{state}' webhook configured for control {self.name}")
             return None
         if self.post_request(**self.webhooks[state]):
-            self.state = True if state == "on" else False
+            self.state = state
             return True
         else:
             return False
