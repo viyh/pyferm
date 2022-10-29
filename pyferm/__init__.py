@@ -1,9 +1,14 @@
-import yaml
 import logging
 import threading
 import time
+
+import yaml
+
 from pyferm.steps import step_status
 from pyferm.utils import class_loader
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(message)s', level=logging.DEBUG)
 
 
 class singleton(object):
@@ -23,22 +28,18 @@ class threader:
         if not self.thread.is_alive():
             self.thread.start()
 
-    def log(self, message, level="info"):
-        logger = getattr(logging, level)
-        logger(f"{self.logprefix:50s} {message}")
-
     def start(self):
-        self.log("thread start")
+        logger.debug("thread start")
         self._is_running = True
         self.start_thread()
 
     def stop(self):
-        self.log("thread stop")
+        logger.debug("thread stop")
         self._is_running = False
 
     def run(self):
         while self._is_running:
-            self.log("thread sleeper")
+            logger.debug("thread sleeper")
             time.sleep(60)
 
 
@@ -46,11 +47,6 @@ class pyferm:
     def __init__(self):
         self.load_config()
         self.current_step = 0
-        self.logprefix = "pyferm"
-
-    def log(self, message, level="info"):
-        logger = getattr(logging, level)
-        logger(f"{self.logprefix:50s} {message}")
 
     def start(self):
         self.load_sensors()
@@ -66,7 +62,7 @@ class pyferm:
                 try:
                     self.config.update(yaml.safe_load(config_file))
                 except yaml.YAMLError as exc:
-                    self.log(exc, "error")
+                    logger.debug(exc)
 
     def load_sensors(self):
         self.sensors = []
@@ -105,7 +101,7 @@ class pyferm:
     def load_outputs(self):
         self.outputs = []
         for output in self.config.get("outputs", {}):
-            self.log(f"Loading output: {output['class']} - {output['name']}")
+            logger.info(f"Loading output: {output['class']} - {output['name']}")
             output = class_loader(
                 output["class"],
                 output["name"],
@@ -125,20 +121,20 @@ class pyferm:
             )
 
     def step_runner(self):
-        self.log("step_runner - start")
+        logger.info("step_runner - start")
         self._is_running = True
         while self._is_running:
             if self.steps:
                 self.steps[self.current_step].run()
                 if self.steps[self.current_step].status == step_status.COMPLETED:
-                    self.log(f"step_runner - step {self.current_step + 1} complete.")
+                    logger.info(f"step_runner - step {self.current_step + 1} complete.")
                     self.current_step += 1
             if self.steps and self.current_step >= len(self.steps):
                 self._is_running = False
             else:
-                self.log(f"step_runner - sleeping {self.interval} seconds.")
+                logger.info(f"step_runner - sleeping {self.interval} seconds.")
                 time.sleep(self.interval)
-        self.log("step_runner - end")
+        logger.info("step_runner - end")
 
     def get_sensor_by_name(self, name):
         return next((s for s in self.sensors if s.name == name), None)

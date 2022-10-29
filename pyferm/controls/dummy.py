@@ -1,9 +1,10 @@
 # pybrew - sensor - Dummy
 
+import logging
+
 from pyferm.controls import control
 
-from random import randint
-import time
+logger = logging.getLogger(__name__ + '.controls.dummy')
 
 
 class dummy(control):
@@ -11,13 +12,13 @@ class dummy(control):
         super().__init__(name, parent)
 
     def on(self):
-        if self.state is None or self.state == False:
+        if self.state is None or self.state is False:
             self.state = True
-            self.log("TRIGGERED ON")
+            logger.info("TRIGGERED ON")
             return True
 
     def off(self):
-        if self.state is None or self.state == True:
+        if self.state is None or self.state is True:
             self.state = False
-            self.log("TRIGGERED OFF")
+            logger.info("TRIGGERED OFF")
             return True

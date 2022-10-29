@@ -1,5 +1,9 @@
-from pyferm.outputs import output
+import logging
+
 import requests
+from pyferm.outputs import output
+
+logger = logging.getLogger(__name__ + '.outputs.brewfather')
 
 allowed_metrics = ["temp", "gravity", "pressure", "ph", "bpm"]
 
@@ -28,29 +32,33 @@ class brewfather(output):
         self.custom_stream_name = custom_stream_name
         self.custom_stream_id = custom_stream_id
         if not self.custom_stream_id:
-            self.log("custom_stream_id param must be set to post data to Brewfather.")
+            logger.info(
+                "custom_stream_id param must be set to post data to Brewfather."
+            )
             return False
         self.metrics_config = metrics
         super().__init__(name, parent, interval)
 
     def push(self):
-        self.log("Push output to brewfather", "debug")
+        logger.debug("Push output to brewfather")
         self.get_metrics()
         if not self.metrics:
-            self.log("no metrics to submit (either not configured of no values yet).")
+            logger.info(
+                "no metrics to submit (either not configured of no values yet)."
+            )
             return False
         data = self.create_request()
         return self.post_request(json=data)
 
     def post_request(self, url="https://log.brewfather.net/stream", json=None):
         params = {"id": self.custom_stream_id}
-        self.log(f"json: {json}", "debug")
+        logger.debug(f"json: {json}")
         response = requests.post(url, params=params, json=json)
         if response.status_code == 200:
-            self.log(f"submitted data: {json}")
+            logger.info(f"submitted data: {json}")
             return True
         else:
-            self.log(
+            logger.info(
                 "received unsuccessful response. HTTP Error Code: "
                 f"{response.status_code}"
             )
@@ -60,8 +68,8 @@ class brewfather(output):
         self.metrics = {}
         for metric_name, metric_config in self.metrics_config.items():
             if metric_name not in allowed_metrics:
-                self.log(
-                    f"metric {metric_name} is not a known Brewfather metric.", "warn"
+                logger.warn(
+                    f"metric {metric_name} is not a known Brewfather metric."
                 )
                 continue
             sensor = self.parent.get_sensor_by_name(metric_config["sensor"])

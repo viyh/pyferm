@@ -1,12 +1,15 @@
 import datetime
+import logging
+
 from pyferm import threader
+
+logger = logging.getLogger(__name__ + '.actions')
 
 
 class action(threader):
     def __init__(self, name, parent, **kwargs):
         self.name = name
         self.parent = parent
-        self.logprefix = f"action - {self.name}"
         self.state = None
         self.params = kwargs
         self.load_controls(self.params["controls"])
@@ -26,7 +29,7 @@ class action(threader):
 
     def set_params(self, action, **params):
         for p in params:
-            self.log(f"setting param [{p}] = {params[p]}", "debug")
+            logger.debug(f"setting param [{p}] = {params[p]}")
             self.params[p] = params[p]
 
     def load_controls(self, controls):

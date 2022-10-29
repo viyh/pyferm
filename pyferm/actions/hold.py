@@ -1,5 +1,9 @@
+import logging
 import time
+
 from pyferm.actions import action
+
+logger = logging.getLogger(__name__ + '.actions.hold')
 
 
 class hold(action):
@@ -14,36 +18,36 @@ class hold(action):
 
         while self._is_running:
             if getattr(self, "value"):
-                self.log(f"set value: {self.value}")
+                logger.info(f"set value: {self.value}")
                 sensor = self.parent.get_sensor_by_name(self.metric["sensor"])
                 metric = sensor.get_metric_by_name(self.metric["metric"])
                 metric_value = metric.get_value()
                 if metric_value:
-                    self.log(f"metric value: {metric_value}")
+                    logger.info(f"metric value: {metric_value}")
                     if metric_value < self.value - self.low["threshold"]:
-                        self.log(f"low threshold, triggering {self.low['control']}")
+                        logger.info(f"low threshold, triggering {self.low['control']}")
                         self.low_on()
                     if (
                         metric_value >= self.value - self.low["threshold"]
                         and metric_value
                     ):
-                        self.log(
+                        logger.info(
                             f"low threshold met, turning off {self.low['control']}"
                         )
                         self.low_off()
                     if metric_value > self.value + self.high["threshold"]:
-                        self.log(f"high threshold, triggering {self.high['control']}")
+                        logger.info(f"high threshold, triggering {self.high['control']}")
                         self.high_on()
                     if metric_value <= self.value - self.high["threshold"]:
-                        self.log(
+                        logger.info(
                             f"high threshold met, turning off {self.high['control']}"
                         )
                         self.high_off()
                 else:
-                    self.log(
+                    logger.info(
                         f'no metric value for {self.metric["sensor"]} - '
                         f'{self.metric["metric"]}'
                     )
 
-            self.log(f"sleeping {self.interval} seconds")
+            logger.info(f"sleeping {self.interval} seconds")
             time.sleep(self.interval)

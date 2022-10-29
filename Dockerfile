@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y \
 RUN pip install setuptools==57.5.0 && \
     pip install gattlib pyyaml && \
     pip install \
+        bluepy==1.3.0 \
         beacontools==2.1.0 \
         requests==2.28.1
 
@@ -24,5 +25,3 @@ RUN pip install pybluez
 #git+https://github.com/tonyfettes/pybluez.git
 
 WORKDIR /usr/src/app
-
-

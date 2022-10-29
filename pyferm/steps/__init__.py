@@ -1,8 +1,11 @@
+import datetime
 import logging
 import time
-import datetime
-from pyferm.conditions import condition
 from enum import Enum
+
+from pyferm.conditions import condition
+
+logger = logging.getLogger(__name__ + '.steps')
 
 
 class step_status(Enum):
@@ -18,7 +21,6 @@ class step:
     def __init__(self, name, parent, actions=[], triggers=[], conditions=[]):
         self.name = name
         self.parent = parent
-        self.logprefix = f"step - {self.name}"
         self.start_time = None
         self.end_time = None
         self.elapsed = None
@@ -26,14 +28,10 @@ class step:
         self.actions_config = actions
         self.conditions = self.load_conditions(conditions)
         self.status = step_status.NOT_RUNNING
-        self.log("init")
-
-    def log(self, message, level="info"):
-        logger = getattr(logging, level)
-        logger(f"{self.logprefix:50s} {message}")
+        logger.debug("init")
 
     def run(self):
-        self.log(f"status: {self.get_status()}")
+        logger.debug(f"status: {self.get_status()}")
         # if not running, begin
         if self.status == step_status.NOT_RUNNING:
             self.start_time = datetime.datetime.utcnow()
@@ -72,7 +70,7 @@ class step:
             return False
 
     def run_conditions(self):
-        self.log("run_conditions", "debug")
+        logger.debug("run_conditions")
         if self.check_conditions(self.conditions):
             self.stop()
 
@@ -82,15 +80,15 @@ class step:
         for action in self.actions:
             action.start()
         self.status = step_status.RUNNING
-        self.log("start")
+        logger.info("start")
 
     def stop(self):
         self.status = step_status.COMPLETED
         self.end_time = datetime.datetime.utcnow()
-        self.log("stop")
-        self.log(f"start time: {self.time_string(self.start_time)}")
-        self.log(f"end time: {self.time_string(self.end_time)}")
-        self.log(f"elapsed time: {self.elapsed} seconds")
+        logger.info("stop")
+        logger.info(f"start time: {self.time_string(self.start_time)}")
+        logger.info(f"end time: {self.time_string(self.end_time)}")
+        logger.info(f"elapsed time: {self.elapsed} seconds")
         self.actions = None
 
     def get_status(self):

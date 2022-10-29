@@ -1,15 +1,19 @@
-import sys
+import datetime
+import logging
 import math
+import sys
 import time
+
 from pyferm import threader
+
+logger = logging.getLogger(__name__ + '.sensors')
 
 
 class sensor(threader):
     def __init__(self, name, parent):
         self.name = name
         self.parent = parent
-        self.logprefix = f"sensor - {self.name}"
-        self.log("init")
+        logger.info("init")
         self.interval = 7
         if not hasattr(self, "metrics"):
             self.metrics = []
@@ -19,7 +23,10 @@ class sensor(threader):
         while self._is_running:
             self.get_metrics()
             for m in self.metrics:
-                self.log(f"{m.name:20s} {m.get_formatted_value()}", "debug")
+                if datetime.datetime.utcnow() - m.last_updated < datetime.timedelta(
+                    seconds=self.interval
+                ):
+                    logger.debug(f"{m.name:20s} {m.get_formatted_value()}")
             time.sleep(self.interval)
 
     def get_metric_by_name(self, name):
@@ -115,10 +122,12 @@ class metric:
         self.name = name
         self.metric_type = getattr(sys.modules[__name__], metric_type)()
         self.value = None
+        self.last_updated = datetime.datetime.utcnow()
         self.set_unit(unit)
 
     def set_value(self, value):
         self.value = value
+        self.last_updated = datetime.datetime.utcnow()
 
     def set_unit(self, unit):
         if unit not in self.metric_type.units:

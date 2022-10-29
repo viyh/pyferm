@@ -1,12 +1,14 @@
 # pybrew - sensor - Tilt Hydrometer
 
-import time
 import datetime
+import logging
 import threading
+import time
 from random import randint
-from pyferm import singleton
-from pyferm.sensors import sensor, metric
+
 from beacontools import BeaconScanner, IBeaconFilter
+from pyferm import singleton
+from pyferm.sensors import metric, sensor
 
 TILTS = {
     "a495bb10-c5b1-4b44-b512-1370f02d74de": "Red",
@@ -19,6 +21,8 @@ TILTS = {
     "a495bb80-c5b1-4b44-b512-1370f02d74de": "Pink",
 }
 
+logger = logging.getLogger(__name__ + '.sensors.tilt')
+
 
 class tilt_scanner(singleton):
     def __init__(self, scantime=5, interval=15):
@@ -27,6 +31,8 @@ class tilt_scanner(singleton):
         self.random = randint(0, 10000)
         self.interval = interval
         self.scantime = scantime
+        logger.debug("Creating BeaconScanner")
+        self.scanner = BeaconScanner(self.callback, device_filter=self.filters)
         if self.interval < self.scantime:
             raise("Tilt scan time must be less than the scan interval.")
         thread = threading.Thread(name="tilt_scanner", target=self.run, args=())
@@ -40,17 +46,26 @@ class tilt_scanner(singleton):
             "gravity": additional_info["minor"] / 1000,
             "last_seen": datetime.datetime.utcnow(),
         }
+        logger.debug(self.cache[additional_info["uuid"]])
 
     def run(self):
+        logger.debug("Scanner start")
+        self.scanner.start()
         while True:
             self.get_data()
             time.sleep(self.interval)
+            logger.debug("Checking for last measurments in cache...")
+        logger.debug("Scanner stop")
+        self.scanner.stop()
+        logger.debug("Scan complete")
 
     def get_data(self):
-        self.scanner = BeaconScanner(self.callback, device_filter=self.filters)
-        self.scanner.start()
+        logger.debug("Scanning toggle true")
+        self.scanner._mon.toggle_scan(True)
+        logger.debug(f"Scanning for {self.scantime} seconds")
         time.sleep(self.scantime)
-        self.scanner.stop()
+        logger.debug("Scanning toggle false")
+        self.scanner._mon.toggle_scan(False)
 
 
 class tilt(sensor):
@@ -76,9 +91,8 @@ class tilt(sensor):
             self.name = f"Tilt ({TILTS[self.uuid]})"
         if self.uuid and self.uuid in self.tilt_scanner.cache:
             self.last_seen = self.tilt_scanner.cache[self.uuid]["last_seen"]
-            self.log(
-                f'last seen: {self.last_seen.strftime("%Y-%m-%d %H:%M:%S")}',
-                "debug",
+            logger.debug(
+                f'last seen: {self.last_seen.strftime("%Y-%m-%d %H:%M:%S")}'
             )
             self.get_metric_by_name("temperature").set_value(
                 self.tilt_scanner.cache[self.uuid]["temperature"]
