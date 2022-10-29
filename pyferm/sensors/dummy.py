@@ -6,7 +6,7 @@ from random import randint
 
 from . import metric, sensor
 
-logger = logging.getLogger(__name__ + '.sensors.dummy')
+logger = logging.getLogger(__name__)
 
 
 class dummy(sensor):

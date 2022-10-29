@@ -21,7 +21,7 @@ TILTS = {
     "a495bb80-c5b1-4b44-b512-1370f02d74de": "Pink",
 }
 
-logger = logging.getLogger(__name__ + '.sensors.tilt')
+logger = logging.getLogger(__name__)
 
 
 class tilt_scanner(singleton):

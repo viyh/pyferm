@@ -5,7 +5,7 @@ from enum import Enum
 
 from pyferm.conditions import condition
 
-logger = logging.getLogger(__name__ + '.steps')
+logger = logging.getLogger(__name__)
 
 
 class step_status(Enum):

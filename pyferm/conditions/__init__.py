@@ -1,7 +1,7 @@
 import logging
 import operator
 
-logger = logging.getLogger(__name__ + '.conditions')
+logger = logging.getLogger(__name__)
 
 
 class condition:

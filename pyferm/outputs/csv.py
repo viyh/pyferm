@@ -5,7 +5,7 @@ import os
 
 from pyferm.outputs import output
 
-logger = logging.getLogger(__name__ + '.outputs.csv')
+logger = logging.getLogger(__name__)
 
 
 class output_csv(output):

@@ -3,7 +3,7 @@ import logging
 import requests
 from pyferm.controls import control
 
-logger = logging.getLogger(__name__ + '.controls.ifttt')
+logger = logging.getLogger(__name__)
 
 
 class ifttt(control):

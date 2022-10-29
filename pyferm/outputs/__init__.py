@@ -4,7 +4,7 @@ import time
 
 from pyferm import threader
 
-logger = logging.getLogger(__name__ + '.outputs')
+logger = logging.getLogger(__name__)
 
 
 class output(threader):

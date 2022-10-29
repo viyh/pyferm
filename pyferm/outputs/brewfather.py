@@ -3,7 +3,7 @@ import logging
 import requests
 from pyferm.outputs import output
 
-logger = logging.getLogger(__name__ + '.outputs.brewfather')
+logger = logging.getLogger(__name__)
 
 allowed_metrics = ["temp", "gravity", "pressure", "ph", "bpm"]
 

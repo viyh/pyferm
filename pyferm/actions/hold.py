@@ -3,7 +3,7 @@ import time
 
 from pyferm.actions import action
 
-logger = logging.getLogger(__name__ + '.actions.hold')
+logger = logging.getLogger(__name__)
 
 
 class hold(action):
@@ -36,7 +36,9 @@ class hold(action):
                         )
                         self.low_off()
                     if metric_value > self.value + self.high["threshold"]:
-                        logger.info(f"high threshold, triggering {self.high['control']}")
+                        logger.info(
+                            f"high threshold, triggering {self.high['control']}"
+                        )
                         self.high_on()
                     if metric_value <= self.value - self.high["threshold"]:
                         logger.info(

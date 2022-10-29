@@ -6,7 +6,7 @@ import time
 
 from pyferm import threader
 
-logger = logging.getLogger(__name__ + '.sensors')
+logger = logging.getLogger(__name__)
 
 
 class sensor(threader):
@@ -26,7 +26,11 @@ class sensor(threader):
                 if datetime.datetime.utcnow() - m.last_updated < datetime.timedelta(
                     seconds=self.interval
                 ):
-                    logger.debug(f"{m.name:20s} {m.get_formatted_value()}")
+                    logger.debug(
+                        f"{self.name:20s} [last_updated: "
+                        f"{m.time_string(m.last_updated)}] - {m.name:20s} "
+                        f"{m.get_formatted_value()}"
+                    )
             time.sleep(self.interval)
 
     def get_metric_by_name(self, name):
@@ -143,3 +147,6 @@ class metric:
             return f"{self.get_value():{self.unit['format']}} {self.unit['symbol']}"
         except TypeError:
             return f"{self.get_value()} {self.unit['symbol']}"
+
+    def time_string(self, dt):
+        return dt.strftime("%Y-%m-%d %H:%M:%S")

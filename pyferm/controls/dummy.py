@@ -4,7 +4,7 @@ import logging
 
 from pyferm.controls import control
 
-logger = logging.getLogger(__name__ + '.controls.dummy')
+logger = logging.getLogger(__name__)
 
 
 class dummy(control):

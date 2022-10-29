@@ -3,7 +3,7 @@ import logging
 
 from pyferm import threader
 
-logger = logging.getLogger(__name__ + '.actions')
+logger = logging.getLogger(__name__)
 
 
 class action(threader):

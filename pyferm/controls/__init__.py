@@ -1,6 +1,6 @@
 import logging
 
-logger = logging.getLogger(__name__ + '.controls')
+logger = logging.getLogger(__name__)
 
 
 class control:
